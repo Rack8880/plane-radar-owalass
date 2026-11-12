@@ -7,6 +7,7 @@
 #include <cstring>
 
 #include <Preferences.h>
+#include "services/prefs_util.h"
 #include <esp_system.h>
 #include <esp_wifi.h>
 
@@ -136,14 +137,14 @@ bool consumeForceConfigPortal() {
     s_force_config_portal = false;
     Preferences prefs;
     if (prefs.begin(kWifiPrefsNamespace, false)) {
-      prefs.remove(kPrefsForcePortalKey);
+      services::prefs::removeIfPresent(prefs, kPrefsForcePortalKey);
       prefs.end();
     }
     return true;
   }
 
   Preferences prefs;
-  if (!prefs.begin(kWifiPrefsNamespace, true)) {
+  if (!services::prefs::openForRead(prefs, kWifiPrefsNamespace)) {
     return false;
   }
   const bool pending = prefs.getBool(kPrefsForcePortalKey, false);
@@ -153,7 +154,7 @@ bool consumeForceConfigPortal() {
   }
 
   if (prefs.begin(kWifiPrefsNamespace, false)) {
-    prefs.remove(kPrefsForcePortalKey);
+    services::prefs::removeIfPresent(prefs, kPrefsForcePortalKey);
     prefs.end();
   }
   return true;
@@ -376,7 +377,7 @@ bool wifiShowsSetupScreenOnBoot() {
     return true;
   }
   Preferences prefs;
-  if (!prefs.begin(kWifiPrefsNamespace, true)) {
+  if (!services::prefs::openForRead(prefs, kWifiPrefsNamespace)) {
     return false;
   }
   const bool pending = prefs.getBool(kPrefsForcePortalKey, false);

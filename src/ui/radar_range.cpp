@@ -4,6 +4,7 @@
 
 #include <Arduino.h>
 #include <Preferences.h>
+#include "services/prefs_util.h"
 #include <cctype>
 #include <cmath>
 #include <cstdio>
@@ -119,11 +120,11 @@ void normaliseWatch(const char* in, char* out, size_t out_len) {
 }  // namespace
 
 void rangeInit() {
-  if (!s_prefs.begin(kPrefsNamespace, true)) {
+  if (!services::prefs::openForRead(s_prefs, kPrefsNamespace)) {
     return;
   }
   float km[kRangePresetCount];
-  if (s_prefs.getBytesLength(kPrefsPresetsKey) == sizeof(km) &&
+  if (services::prefs::blobLength(s_prefs, kPrefsPresetsKey) == sizeof(km) &&
       s_prefs.getBytes(kPrefsPresetsKey, km, sizeof(km)) == sizeof(km) &&
       presetsValid(km, kRangePresetCount)) {
     applyPresets(km);
@@ -284,8 +285,8 @@ void unitsReset() {
   s_use_miles = false;
   s_show_runways = true;
   if (s_prefs.begin(kPrefsNamespace, false)) {
-    s_prefs.remove(kPrefsMilesKey);
-    s_prefs.remove(kPrefsRunwaysKey);
+    services::prefs::removeIfPresent(s_prefs, kPrefsMilesKey);
+    services::prefs::removeIfPresent(s_prefs, kPrefsRunwaysKey);
     s_prefs.end();
   }
 }

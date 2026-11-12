@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include <Preferences.h>
+#include "services/prefs_util.h"
 
 #include <cstdio>
 #include <cstring>
@@ -109,7 +110,7 @@ void loadPreset(const Theme& t) { memcpy(s_rgb, t.rgb, sizeof(s_rgb)); }
 void init() {
   loadPreset(kPresets[0]);
   Preferences prefs;
-  if (!prefs.begin(kPrefsNamespace, true)) {
+  if (!services::prefs::openForRead(prefs, kPrefsNamespace)) {
     return;  // nothing saved yet: classic
   }
   char id[sizeof(s_preset)] = "";
@@ -120,7 +121,7 @@ void init() {
   s_preset[sizeof(s_preset) - 1] = '\0';
 
   uint32_t saved[kSlotCount];
-  if (prefs.getBytesLength(kKeyColours) == sizeof(saved) &&
+  if (services::prefs::blobLength(prefs, kKeyColours) == sizeof(saved) &&
       prefs.getBytes(kKeyColours, saved, sizeof(saved)) == sizeof(saved)) {
     for (size_t i = 0; i < kSlotCount; ++i) {
       s_rgb[i] = saved[i] & 0xFFFFFF;
@@ -156,9 +157,9 @@ void save(const char* preset_id, const uint32_t* rgb, bool swap_red_blue) {
   prefs.putBytes(kKeyColours, s_rgb, sizeof(s_rgb));
   prefs.putString(kKeyPreset, s_preset);
   prefs.putBool(kKeySwap, s_swap);
-  prefs.remove(kKeyOldBg);
-  prefs.remove(kKeyOldGrid);
-  prefs.remove(kKeyOldPlane);
+  services::prefs::removeIfPresent(prefs, kKeyOldBg);
+  services::prefs::removeIfPresent(prefs, kKeyOldGrid);
+  services::prefs::removeIfPresent(prefs, kKeyOldPlane);
   prefs.end();
   Serial.printf("Theme: %s\n", s_preset);
 }

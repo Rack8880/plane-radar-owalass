@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include <Preferences.h>
+#include "services/prefs_util.h"
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -65,7 +66,7 @@ void persistSlot(uint8_t slot) {
   if (s_slots[slot].valid) {
     prefs.putBytes(key, &s_slots[slot], sizeof(SavedLocation));
   } else {
-    prefs.remove(key);
+    services::prefs::removeIfPresent(prefs, key);
   }
   prefs.end();
 }
@@ -74,7 +75,9 @@ void persistSlot(uint8_t slot) {
 
 void init() {
   Preferences prefs;
-  prefs.begin(kPrefsNamespace, true);
+  if (!services::prefs::openForRead(prefs, kPrefsNamespace)) {
+    return;  // nothing saved yet: config defaults
+  }
   if (prefs.isKey(kKeyLat) && prefs.isKey(kKeyLon)) {
     const double lat = prefs.getDouble(kKeyLat, config::kDefaultRadarLat);
     const double lon = prefs.getDouble(kKeyLon, config::kDefaultRadarLon);
@@ -87,7 +90,7 @@ void init() {
     char key[4];
     slotKey(i, key, sizeof(key));
     SavedLocation loc = {};
-    if (prefs.getBytesLength(key) == sizeof(loc) &&
+    if (services::prefs::blobLength(prefs, key) == sizeof(loc) &&
         prefs.getBytes(key, &loc, sizeof(loc)) == sizeof(loc) && loc.valid &&
         validLatLon(loc.lat, loc.lon)) {
       loc.name[kLocationNameMax] = '\0';
@@ -130,9 +133,9 @@ bool saveFromStrings(const char* lat_str, const char* lon_str) {
 void clear() {
   Preferences prefs;
   prefs.begin(kPrefsNamespace, false);
-  prefs.remove(kKeyLat);
-  prefs.remove(kKeyLon);
-  prefs.remove(kKeyActive);
+  services::prefs::removeIfPresent(prefs, kKeyLat);
+  services::prefs::removeIfPresent(prefs, kKeyLon);
+  services::prefs::removeIfPresent(prefs, kKeyActive);
   prefs.end();
   s_lat = config::kDefaultRadarLat;
   s_lon = config::kDefaultRadarLon;

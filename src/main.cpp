@@ -26,11 +26,16 @@ unsigned long g_last_redraw_ms = 0;
 bool g_ip_screen = false;
 unsigned long g_ip_screen_start_ms = 0;
 int g_ip_screen_shown = -1;
+// Only the first connection after power-on (or first-time setup) shows the
+// IP screen; reconnects after a Wi-Fi dropout go straight back to the radar.
+bool g_ip_screen_used = false;
 
 void startIpScreen() {
-  if (config::kIpScreenSeconds <= 0 || WiFi.status() != WL_CONNECTED) {
+  if (g_ip_screen_used || config::kIpScreenSeconds <= 0 ||
+      WiFi.status() != WL_CONNECTED) {
     return;
   }
+  g_ip_screen_used = true;
   const String ip = WiFi.localIP().toString();
   Serial.printf("Showing IP address for %d s\n", config::kIpScreenSeconds);
   statusScreenIpBegin(ip.c_str());
@@ -152,7 +157,10 @@ void loop() {
       g_last_reconnect_ms = millis();
       if (wifiReconnect()) {
         g_wifi_down_since = 0;
-        startIpScreen();
+        startIpScreen();  // no-op unless this is the first connect since power-on
+        if (!g_ip_screen) {
+          showRadarIfConnected();
+        }
       }
     }
   } else {
@@ -163,7 +171,8 @@ void loop() {
       }
     } else if (!g_radar_visible) {
       // Connected without going through startIpScreen() (e.g. the Wi-Fi
-      // reconnected by itself): show the IP first, then the radar.
+      // reconnected by itself). The IP screen only appears if this is the
+      // first connection since power-on; otherwise straight to the radar.
       startIpScreen();
       if (!g_ip_screen) {
         showRadarIfConnected();
