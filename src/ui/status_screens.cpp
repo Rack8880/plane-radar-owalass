@@ -274,3 +274,67 @@ void statusScreenWifiReset() {
   drawTextBlock(yellowForPanel(), config::kTextOnYellow, lines,
                 sizeof(lines) / sizeof(lines[0]));
 }
+
+namespace {
+
+constexpr int kIpTextMaxWidthPx = 200;  // fits the round screen at mid height
+constexpr int kIpCountdownY = 182;
+constexpr float kIpCountdownVlw = 1.6f;
+
+void applyIpCountdownStyle() {
+  if (displayFontIsSmooth()) {
+    displayFontSetSmoothSize(tft, kIpCountdownVlw);
+  } else {
+    displayFontSetBitmap(tft, &kPortalGfxEmphasis);
+  }
+}
+
+}  // namespace
+
+void statusScreenIpBegin(const char* ip) {
+  const uint16_t bg = connectingBg();
+  tft.fillScreen(bg);
+  tft.setTextDatum(textdatum_t::middle_center);
+  tft.setTextColor(connectingText(), bg);
+
+  if (displayFontIsSmooth()) {
+    displayFontSetSmoothSize(tft, 1.0f);
+  } else {
+    displayFontSetBitmap(tft, &kPortalGfxBody);
+  }
+  tft.drawString("Settings page:", kCenterX, 68);
+
+  // The IP as large as fits across the screen.
+  if (displayFontIsSmooth()) {
+    float size = 1.5f;
+    displayFontSetSmoothSize(tft, size);
+    while (size > 0.8f && tft.textWidth(ip) > kIpTextMaxWidthPx) {
+      size -= 0.05f;
+      displayFontSetSmoothSize(tft, size);
+    }
+  } else {
+    displayFontSetBitmap(tft, &kPortalGfxEmphasis);
+    if (tft.textWidth(ip) > kIpTextMaxWidthPx) {
+      displayFontSetBitmap(tft, &kPortalGfxBody);
+    }
+  }
+  tft.drawString(ip, kCenterX, 104);
+
+  applyConnectingDetailStyle();
+  char host_line[48];
+  snprintf(host_line, sizeof(host_line), "or %s", config::kPortalHostUrl);
+  tft.drawString(host_line, kCenterX, 140);
+}
+
+void statusScreenIpCountdown(int seconds_left) {
+  const uint16_t bg = connectingBg();
+  applyIpCountdownStyle();
+  const int h = tft.fontHeight();
+  // Clear just the number's band, so the rest of the screen doesn't flicker.
+  tft.fillRect(kCenterX - 70, kIpCountdownY - h / 2 - 3, 140, h + 6, bg);
+  tft.setTextDatum(textdatum_t::middle_center);
+  tft.setTextColor(connectingText(), bg);
+  char buf[12];
+  snprintf(buf, sizeof(buf), "%d...", seconds_left);
+  tft.drawString(buf, kCenterX, kIpCountdownY);
+}

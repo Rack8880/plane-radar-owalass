@@ -9,6 +9,9 @@ namespace config {
 /** Shown on the settings page's Device screen. */
 constexpr char kFirmwareVersion[] = "custom-1.0";
 
+/** After Wi-Fi connects, show the IP address this long (0 = skip). */
+constexpr int kIpScreenSeconds = 30;
+
 // --- Wi-Fi portal ---
 constexpr char kPortalApName[] = "PlaneRadar-Setup";
 constexpr char kPortalIp[] = "192.168.4.1";
