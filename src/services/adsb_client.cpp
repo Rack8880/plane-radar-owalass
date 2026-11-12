@@ -8,6 +8,7 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
 
+#include <cmath>
 #include <cstring>
 
 #include "config.h"
@@ -209,7 +210,9 @@ void copyJsonStringTrimmed(const JsonObject& obj, const char* key, char* out,
   out[n] = '\0';
 }
 
-void formatAltitudeTag(const JsonObject& plane, char* out, size_t out_len) {
+void formatAltitudeTag(const JsonObject& plane, char* out, size_t out_len,
+                       float* alt_ft) {
+  *alt_ft = NAN;
   out[0] = '\0';
   if (out_len == 0) {
     return;
@@ -227,6 +230,7 @@ void formatAltitudeTag(const JsonObject& plane, char* out, size_t out_len) {
   float alt = 0.0f;
   if (readJsonFloat(plane, "alt_baro", &alt) ||
       readJsonFloat(plane, "alt_geom", &alt)) {
+    *alt_ft = alt;
     snprintf(out, out_len, "%d ft", static_cast<int>(lroundf(alt)));
   }
 }
@@ -238,7 +242,7 @@ void fillTagFields(Aircraft* ac, const JsonObject& plane) {
   }
 
   copyJsonStringTrimmed(plane, "t", ac->type, sizeof(ac->type));
-  formatAltitudeTag(plane, ac->alt, sizeof(ac->alt));
+  formatAltitudeTag(plane, ac->alt, sizeof(ac->alt), &ac->alt_ft);
 }
 
 }  // namespace

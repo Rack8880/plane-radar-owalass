@@ -2,6 +2,7 @@
 
 #include <lgfx/v1/lgfx_fonts.hpp>
 
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <cstddef>
@@ -10,6 +11,7 @@
 #include "config.h"
 #include "hardware/display.h"
 #include "hardware/display_font.h"
+#include "ui/radar_colors.h"
 
 namespace {
 
@@ -43,6 +45,37 @@ constexpr auto& kPortalGfxTitle = fonts::FreeSansBold18pt7b;
 constexpr auto& kPortalGfxBody = fonts::FreeSansBold12pt7b;
 constexpr auto& kPortalGfxEmphasis = fonts::FreeSansBold18pt7b;
 constexpr auto& kConnectingGfxDetail = fonts::FreeSans9pt7b;
+
+/** Yellow as this panel shows it: the module swaps red and blue, so ask for
+ *  cyan when the "Swap red and blue" setting is on (same switch as the radar). */
+uint16_t yellowForPanel() {
+  return ui::radar::colors::swapRedBlue() ? tft.color565(0, 255, 255)
+                                          : config::kColorYellow;
+}
+
+// The "Connecting to..." screen follows the Colours page theme: background,
+// text, and a spinner in the rings colour (brightened) fading into the
+// background. The yellow setup / error / reset screens stay yellow on purpose
+// so instructions are always readable.
+uint16_t connectingBg() {
+  return ui::radar::colors::panel565(ui::radar::colors::kBackground);
+}
+
+uint16_t connectingText() {
+  return ui::radar::colors::panel565(ui::radar::colors::kText);
+}
+
+/** Rings colour scaled up so its brightest channel is full (dim green -> bright). */
+uint32_t spinnerHeadRgb() {
+  const uint32_t rgb = ui::radar::colors::grid();
+  const uint32_t r = (rgb >> 16) & 0xFF, g = (rgb >> 8) & 0xFF, b = rgb & 0xFF;
+  const uint32_t peak = std::max(r, std::max(g, b));
+  if (peak == 0) {
+    return 0x00FF00;
+  }
+  auto up = [peak](uint32_t c) { return std::min<uint32_t>(255, c * 255 / peak); };
+  return (up(r) << 16) | (up(g) << 8) | up(b);
+}
 
 struct TextLine {
   const char* text;
@@ -127,10 +160,10 @@ void fitSsidLine() {
 }
 
 void drawConnectingText() {
-  tft.fillScreen(config::kColorBlack);
+  tft.fillScreen(connectingBg());
 
   tft.setTextDatum(textdatum_t::middle_center);
-  tft.setTextColor(config::kTextOnBlack, config::kColorBlack);
+  tft.setTextColor(connectingText(), connectingBg());
 
   applyConnectingDetailStyle();
   const int detail_h = tft.fontHeight();
@@ -138,7 +171,7 @@ void drawConnectingText() {
   const int block_top = (config::kDisplayHeight - total_h) / 2;
   constexpr int kPanelPadY = 8;
   tft.fillRect(kCenterX - kConnectingTextMaxWidthPx / 2, block_top - kPanelPadY,
-               kConnectingTextMaxWidthPx, total_h + kPanelPadY * 2, config::kColorBlack);
+               kConnectingTextMaxWidthPx, total_h + kPanelPadY * 2, connectingBg());
 
   int y = block_top;
   tft.drawString("Connecting to", kCenterX, y + detail_h / 2);
@@ -154,7 +187,7 @@ void eraseSpinnerDots() {
       continue;
     }
     tft.fillCircle(s_spinner_dots[i].x, s_spinner_dots[i].y, kSpinnerEraseRadius,
-                   config::kColorBlack);
+                   connectingBg());
     s_spinner_dots[i].drawn = false;
   }
 }
@@ -168,8 +201,10 @@ void drawSpinnerDots() {
     const int x = kCenterX + static_cast<int>(std::lround(std::cos(a) * kSpinnerRadius));
     const int y = kCenterY + static_cast<int>(std::lround(std::sin(a) * kSpinnerRadius));
 
-    const int fade = 255 - i * 22;
-    const uint16_t color = tft.color565(0, fade, 0);
+    // Head dot full colour, tail fading toward the background.
+    const uint8_t fade = static_cast<uint8_t>(i * 22);
+    const uint16_t color = ui::radar::colors::toPanel565(ui::radar::colors::blend(
+        spinnerHeadRgb(), ui::radar::colors::background(), fade));
     tft.fillSmoothCircle(x, y, kSpinnerDotRadius, color);
 
     s_spinner_dots[i].x = x;
@@ -215,7 +250,7 @@ void statusScreenPortal() {
       {config::kPortalHostUrl, 1.12f, &kPortalGfxEmphasis},
       {"or 192.168.4.1", 1.0f, &kPortalGfxBody},
   };
-  drawTextBlock(config::kColorYellow, config::kTextOnYellow, lines,
+  drawTextBlock(yellowForPanel(), config::kTextOnYellow, lines,
                 sizeof(lines) / sizeof(lines[0]));
 }
 
@@ -227,7 +262,7 @@ void statusScreenConnectFailed() {
       {"Hold BOOT 3 sec", 1.0f, &kGfxBody},
       {"to reset Wi-Fi", 1.0f, &kGfxBody},
   };
-  drawTextBlock(config::kColorYellow, config::kTextOnYellow, lines,
+  drawTextBlock(yellowForPanel(), config::kTextOnYellow, lines,
                 sizeof(lines) / sizeof(lines[0]));
 }
 
@@ -236,6 +271,6 @@ void statusScreenWifiReset() {
       {"Wi-Fi reset", 1.15f, &kPortalGfxTitle},
       {"Restarting...", 1.05f, &kPortalGfxBody},
   };
-  drawTextBlock(config::kColorYellow, config::kTextOnYellow, lines,
+  drawTextBlock(yellowForPanel(), config::kTextOnYellow, lines,
                 sizeof(lines) / sizeof(lines[0]));
 }

@@ -6,6 +6,9 @@
 
 namespace config {
 
+/** Shown on the settings page's Device screen. */
+constexpr char kFirmwareVersion[] = "custom-1.0";
+
 // --- Wi-Fi portal ---
 constexpr char kPortalApName[] = "PlaneRadar-Setup";
 constexpr char kPortalIp[] = "192.168.4.1";

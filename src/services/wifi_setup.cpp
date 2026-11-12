@@ -16,6 +16,7 @@
 
 #include "config.h"
 #include "services/radar_location.h"
+#include "services/web_portal.h"
 #include "ui/radar_range.h"
 #include "ui/status_screens.h"
 
@@ -231,30 +232,29 @@ void ensureWifiManager() {
   s_wm_configured = true;
 }
 
+// On the home network the radar serves its own settings site
+// (services/web_portal) instead of WiFiManager's pages.
 void startLanWebPortal() {
-  if (!wifiLinkUp() || s_wm.getWebPortalActive() ||
+  if (!wifiLinkUp() || services::web::active() ||
       s_wm.getConfigPortalActive()) {
     return;
   }
-  refreshPortalParamValues();
-  WiFi.mode(WIFI_STA);
-  s_wm.setConfigPortalBlocking(false);
 #ifdef WM_MDNS
   MDNS.end();
   if (MDNS.begin(config::kPortalHostname)) {
     MDNS.addService("http", "tcp", 80);
   }
 #endif
-  s_wm.startWebPortal();
-  Serial.printf("LAN config: http://%s.local or http://%s\n",
+  services::web::start();
+  Serial.printf("Settings page: http://%s.local or http://%s\n",
                 config::kPortalHostname, WiFi.localIP().toString().c_str());
 }
 
 void stopLanWebPortal() {
-  if (!s_wm.getWebPortalActive()) {
+  if (!services::web::active()) {
     return;
   }
-  s_wm.stopWebPortal();
+  services::web::stop();
 #ifdef WM_MDNS
   MDNS.end();
 #endif
@@ -437,16 +437,27 @@ bool wifiReconnect() {
   return connectSavedNetwork(true);
 }
 
+void wifiEraseCredentialsOnlyAndReboot() {
+  // Wi-Fi only: location, saved locations, settings and colours are kept.
+  markForceConfigPortal();
+  eraseWifiCredentials();
+  Serial.println("WiFi credentials cleared (settings kept)");
+  statusScreenWifiReset();
+  delay(800);
+  esp_restart();
+}
+
 void wifiLoop() {
   ensureWifiManager();
   if (wifiLinkUp()) {
-    if (!s_wm.getWebPortalActive() && !s_wm.getConfigPortalActive()) {
+    if (!services::web::active() && !s_wm.getConfigPortalActive()) {
       startLanWebPortal();
     }
-    if (s_wm.getWebPortalActive() || s_wm.getConfigPortalActive()) {
+    if (s_wm.getConfigPortalActive()) {
       bootButtonPollLongPress();
       s_wm.process();
     }
+    services::web::handleClient();
   } else {
     stopLanWebPortal();
   }

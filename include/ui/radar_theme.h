@@ -62,7 +62,8 @@ constexpr int kBeyondRingScreenMarginPx = 2;
 /** Target cap height (px) for aircraft tags (bold, slightly above scale label). */
 constexpr int kAircraftTagLabelHeightPx = 13;
 
-/** RGB565 palette targets (applied in initPalette). */
+/** Original palette, kept for reference only: every radar colour now comes
+ *  from the user theme (ui/radar_colors.h, Colours page). */
 constexpr uint8_t kBgR = 4;
 constexpr uint8_t kBgG = 10;
 constexpr uint8_t kBgB = 28;

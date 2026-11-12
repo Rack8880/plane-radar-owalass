@@ -3,6 +3,8 @@
 /** True when the next boot should show the setup screen first (after credential reset). */
 bool wifiShowsSetupScreenOnBoot();
 void wifiResetCredentialsAndReboot();
+/** Forget only the Wi-Fi network (keeps location/settings), then reboot into setup. */
+void wifiEraseCredentialsOnlyAndReboot();
 /** Boot flow: connect with UI, open portal only if saved creds fail. */
 bool wifiSetupConnect();
 /** Reconnect using saved creds; never opens the captive portal. */

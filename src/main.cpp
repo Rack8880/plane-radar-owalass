@@ -10,6 +10,7 @@
 #include "services/adsb_client.h"
 #include "services/radar_location.h"
 #include "services/wifi_setup.h"
+#include "ui/radar_colors.h"
 #include "ui/radar_display.h"
 #include "ui/radar_range.h"
 #include "ui/status_screens.h"
@@ -73,6 +74,7 @@ void setup() {
   Serial.println("Plane Radar");
 
   bootButtonInit();
+  ui::radar::colors::init();  // before any screen: setup screens use it
   displayInit();
   if (wifiShowsSetupScreenOnBoot()) {
     statusScreenPortal();
