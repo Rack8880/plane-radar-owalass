@@ -18,7 +18,9 @@ After Wi‑Fi is saved, the device reconnects automatically; the radar runs in t
 | Action | Effect |
 |--------|--------|
 | **Short tap** | Cycle range preset (5 → 10 → 15 → 25 km); saved to flash |
-| **Hold 3 s** | Clear Wi‑Fi, location, and units; reboot into setup portal |
+| **Hold 3 s** | Forget Wi‑Fi only (location, saved locations, settings and colours are kept); reboot into setup portal |
+
+A full reset (Wi‑Fi, location and units) is the **Full reset** button on the settings page's Device screen.
 
 During setup you can also hold BOOT at power-on to force a credential reset (same as the long press).
 

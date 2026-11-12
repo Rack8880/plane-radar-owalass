@@ -414,8 +414,10 @@ void bootButtonPollLongPress() {
     if (!s_long_press_handled &&
         millis() - down_ms >= config::kBootResetHoldMs) {
       s_long_press_handled = true;
-      Serial.println("BOOT held — resetting WiFi");
-      wifiResetCredentialsAndReboot();
+      // Safe reset: Wi-Fi only (same as the Device page's "Forget Wi-Fi
+      // only"). The full reset lives on the Device page.
+      Serial.println("BOOT held — forgetting WiFi (settings kept)");
+      wifiEraseCredentialsOnlyAndReboot();
     }
   } else {
     portENTER_CRITICAL(&s_boot_mux);

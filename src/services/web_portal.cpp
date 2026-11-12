@@ -273,6 +273,11 @@ void handleWifiReset() {
   wifiEraseCredentialsOnlyAndReboot();
 }
 
+void handleFullReset() {
+  replyThenRestartSoon();
+  wifiResetCredentialsAndReboot();  // Wi-Fi + radar position + units
+}
+
 void registerRoutes() {
   s_server.on("/", HTTP_GET, [] { sendPage(pages::kIndexHtml, "text/html"); });
   s_server.on("/radar", HTTP_GET, [] { sendPage(pages::kRadarHtml, "text/html"); });
@@ -294,6 +299,7 @@ void registerRoutes() {
   s_server.on("/api/device", HTTP_GET, handleGetDevice);
   s_server.on("/api/restart", HTTP_POST, handleRestart);
   s_server.on("/api/wifi/reset", HTTP_POST, handleWifiReset);
+  s_server.on("/api/device/reset", HTTP_POST, handleFullReset);
   s_server.onNotFound([] {
     // Old WiFiManager bookmarks (e.g. /param) land on the menu.
     s_server.sendHeader("Location", "/");

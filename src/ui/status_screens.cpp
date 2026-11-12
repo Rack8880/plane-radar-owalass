@@ -257,10 +257,10 @@ void statusScreenPortal() {
 void statusScreenConnectFailed() {
   const TextLine lines[] = {
       {"Could not connect", 1.15f, &kGfxTitle},
-      {"Check Wi-Fi password", 1.0f, &kGfxBody},
-      {"and signal strength.", 1.0f, &kGfxBody},
-      {"Hold BOOT 3 sec", 1.0f, &kGfxBody},
-      {"to reset Wi-Fi", 1.0f, &kGfxBody},
+      {"Unplug and plug", 1.0f, &kGfxBody},
+      {"back in to retry,", 1.0f, &kGfxBody},
+      {"or hold BOOT 3 sec", 1.0f, &kGfxBody},
+      {"to set up Wi-Fi again", 1.0f, &kGfxBody},
   };
   drawTextBlock(yellowForPanel(), config::kTextOnYellow, lines,
                 sizeof(lines) / sizeof(lines[0]));

@@ -2,6 +2,8 @@
 
 /** True when the next boot should show the setup screen first (after credential reset). */
 bool wifiShowsSetupScreenOnBoot();
+/** Full reset: Wi-Fi, radar position and units, then reboot into setup.
+ *  Only reachable from the Device page (BOOT hold is Wi-Fi only). */
 void wifiResetCredentialsAndReboot();
 /** Forget only the Wi-Fi network (keeps location/settings), then reboot into setup. */
 void wifiEraseCredentialsOnlyAndReboot();

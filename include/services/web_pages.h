@@ -303,8 +303,11 @@ static const char kDeviceHtml[] PROGMEM = R"rawliteral(<!DOCTYPE html>
 <p class="hint">Forgets the Wi-Fi network and restarts into setup mode
 (join <b>PlaneRadar-Setup</b> to connect it again). Your settings, colours
 and saved locations are kept.</p>
-<p class="hint">Holding the BOOT button for 3 seconds does a bigger reset:
-Wi-Fi, radar position and distance units.</p>
+<p class="hint">Holding the BOOT button on the radar for 3 seconds does the same.</p>
+<button id="full" class="danger">Full reset</button>
+<p class="hint">Forgets the Wi-Fi network, the radar's position and the
+miles/runways choices, then restarts into setup mode. Saved locations,
+other settings and colours are kept.</p>
 <p id="status" class="status" role="status"></p>
 <nav class="links"><a href="/">&larr; Back to menu</a></nav>
 </main>
@@ -325,6 +328,9 @@ $("restart").onclick=()=>post("/api/restart","Restart the radar now?",
 "Restarting. Reload this page in about 20 seconds.");
 $("wifi").onclick=()=>post("/api/wifi/reset","Forget the Wi-Fi network? The radar restarts into setup mode.",
 "Wi-Fi forgotten. Join the PlaneRadar-Setup network to set it up again.");
+$("full").onclick=()=>post("/api/device/reset",
+"Are you sure? Full reset forgets the Wi-Fi network, the radar's position and the miles/runways choices. The radar restarts into setup mode.",
+"Reset done. Join the PlaneRadar-Setup network to set the radar up again.");
 load();
 </script></body></html>
 )rawliteral";
